@@ -1,5 +1,34 @@
 /* Printing Press - Main JavaScript */
 
+// Theme management
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'system';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeButton(savedTheme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'system';
+    const themes = ['light', 'dark', 'system'];
+    const nextIndex = (themes.indexOf(current) + 1) % themes.length;
+    const newTheme = themes[nextIndex];
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+}
+
+function updateThemeButton(theme) {
+    const button = document.querySelector('.theme-switcher');
+    if (button) {
+        const titles = { light: 'Light mode (click for dark)', dark: 'Dark mode (click for system)', system: 'System mode (click for light)' };
+        button.title = titles[theme] || 'Toggle theme';
+    }
+}
+
+// Initialize theme on load
+initTheme();
+
 // Toast notifications
 const toastContainer = document.createElement('div');
 toastContainer.className = 'toast-container';

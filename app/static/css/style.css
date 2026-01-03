@@ -22,6 +22,68 @@
     --transition: 0.15s ease;
 }
 
+/* Light mode - explicit (same as root) */
+[data-theme="light"] {
+    --primary: #0066cc;
+    --primary-light: #e6f0fa;
+    --primary-dark: #004d99;
+    --secondary: #5c6670;
+    --success: #22863a;
+    --success-light: #e6f4ea;
+    --danger: #cb2431;
+    --danger-light: #ffeef0;
+    --warning: #b08800;
+    --warning-light: #fff8e6;
+    --bg: #f6f8fa;
+    --bg-card: #ffffff;
+    --text: #24292e;
+    --text-muted: #6a737d;
+    --border: #e1e4e8;
+    --border-light: #eaecef;
+}
+
+/* Dark mode colors */
+[data-theme="dark"] {
+    --primary: #58a6ff;
+    --primary-light: #1c3a5e;
+    --primary-dark: #79b8ff;
+    --secondary: #8b949e;
+    --success: #3fb950;
+    --success-light: #1b3d2f;
+    --danger: #f85149;
+    --danger-light: #3d1f20;
+    --warning: #d29922;
+    --warning-light: #3d2e00;
+    --bg: #0d1117;
+    --bg-card: #161b22;
+    --text: #c9d1d9;
+    --text-muted: #8b949e;
+    --border: #30363d;
+    --border-light: #21262d;
+}
+
+/* System preference - dark */
+@media (prefers-color-scheme: dark) {
+    [data-theme="system"] {
+        --primary: #58a6ff;
+        --primary-light: #1c3a5e;
+        --primary-dark: #79b8ff;
+        --secondary: #8b949e;
+        --success: #3fb950;
+        --success-light: #1b3d2f;
+        --danger: #f85149;
+        --danger-light: #3d1f20;
+        --warning: #d29922;
+        --warning-light: #3d2e00;
+        --bg: #0d1117;
+        --bg-card: #161b22;
+        --text: #c9d1d9;
+        --text-muted: #8b949e;
+        --border: #30363d;
+        --border-light: #21262d;
+    }
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -121,6 +183,52 @@ body {
     min-width: 18px;
     text-align: center;
     line-height: 1.2;
+}
+
+/* Theme switcher */
+.theme-switcher {
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+}
+
+.theme-switcher:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+.theme-switcher svg {
+    width: 18px;
+    height: 18px;
+}
+
+.theme-switcher .icon-sun,
+.theme-switcher .icon-moon,
+.theme-switcher .icon-system {
+    display: none;
+}
+
+/* Show sun icon in light mode */
+[data-theme="light"] .theme-switcher .icon-sun {
+    display: block;
+}
+
+/* Show moon icon in dark mode */
+[data-theme="dark"] .theme-switcher .icon-moon {
+    display: block;
+}
+
+/* Show system icon in system mode (default) */
+[data-theme="system"] .theme-switcher .icon-system {
+    display: block;
 }
 
 .main {
@@ -501,6 +609,7 @@ body {
     padding: 6px 12px;
     border: none;
     background: var(--bg-card);
+    color: var(--text);
     font-size: 13px;
     cursor: pointer;
     transition: all var(--transition);
