@@ -6,9 +6,9 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app.models import GutenbergBook, BasketItem
+from app.models import GutenbergBook, BasketItem, ProcessingItem
 from app.services.gutenberg import get_gutenberg_service
 from app.services.state_manager import get_state_manager
 
@@ -23,17 +23,19 @@ class SearchResponse(BaseModel):
     page: int
     has_next: bool
     has_prev: bool
+    library_ids: list[int] = Field(default_factory=list)
 
 
 class BasketResponse(BaseModel):
     """Response for basket operations."""
     items: list[BasketItem]
     count: int
+    processing: list[ProcessingItem] = Field(default_factory=list)
 
 
 class AddToBasketRequest(BaseModel):
     """Request to add a book to basket."""
-    book: GutenbergBook
+    book_id: int
 
 
 class MessageResponse(BaseModel):
@@ -50,6 +52,7 @@ async def search_gutenberg(
 ):
     """Search Project Gutenberg for books."""
     service = get_gutenberg_service()
+    state = get_state_manager()
 
     languages = [lang] if lang else None
     books, total, next_url, prev_url = await service.search_books(
@@ -58,12 +61,16 @@ async def search_gutenberg(
         languages=languages,
     )
 
+    # Get IDs of books already in library
+    library_ids = await state.get_library_ids()
+
     return SearchResponse(
         books=books,
         total=total,
         page=page,
         has_next=next_url is not None,
         has_prev=prev_url is not None,
+        library_ids=list(library_ids),
     )
 
 
@@ -84,17 +91,21 @@ async def get_basket():
     """Get all items in the basket."""
     state = get_state_manager()
     items = await state.get_basket()
+    processing = await state.get_processing()
 
-    return BasketResponse(items=items, count=len(items))
+    return BasketResponse(items=items, count=len(items), processing=processing)
 
 
 @router.post("/basket", response_model=MessageResponse)
 async def add_to_basket(request: AddToBasketRequest):
     """Add a book to the basket."""
     state = get_state_manager()
+    service = get_gutenberg_service()
+
+    book_id = request.book_id
 
     # Check if already in library
-    if await state.is_in_library(request.book.id):
+    if await state.is_in_library(book_id):
         return MessageResponse(
             message="Book is already in your library",
             success=False,
@@ -102,7 +113,7 @@ async def add_to_basket(request: AddToBasketRequest):
 
     # Check if already in basket
     basket = await state.get_basket()
-    if any(item.book.id == request.book.id for item in basket):
+    if any(item.book.id == book_id for item in basket):
         return MessageResponse(
             message="Book is already in your basket",
             success=False,
@@ -110,17 +121,25 @@ async def add_to_basket(request: AddToBasketRequest):
 
     # Check if currently processing
     processing = await state.get_processing()
-    if any(item.book.id == request.book.id for item in processing):
+    if any(item.book.id == book_id for item in processing):
         return MessageResponse(
             message="Book is currently being processed",
             success=False,
         )
 
-    item = BasketItem(book=request.book, added_at=datetime.now())
+    # Fetch book details from Gutenberg
+    book = await service.get_book(book_id)
+    if not book:
+        return MessageResponse(
+            message="Book not found on Project Gutenberg",
+            success=False,
+        )
+
+    item = BasketItem(book=book, added_at=datetime.now())
     await state.add_to_basket(item)
 
     return MessageResponse(
-        message=f"Added '{request.book.title}' to basket",
+        message=f"Added '{book.title}' to basket",
         success=True,
     )
 

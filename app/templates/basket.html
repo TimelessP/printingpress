@@ -9,176 +9,224 @@
 <body>
     <div class="app-container">
         <header class="header">
-            <a href="/" class="logo">📚 Printing Press</a>
+            <a href="/" class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                Printing Press
+            </a>
             <nav class="nav">
-                <a href="/" class="nav-link">Search</a>
-                <a href="/basket" class="nav-link active">
-                    Basket
-                    <span id="basket-badge" class="badge" style="display: none;">0</span>
+                <a href="/" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    <span>Search</span>
                 </a>
-                <a href="/library" class="nav-link">Library</a>
+                <a href="/basket" class="nav-link active">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Basket</span>
+                    <span class="badge" id="basket-count" style="display: none;">0</span>
+                </a>
+                <a href="/library" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Library</span>
+                </a>
                 <a href="/events" class="nav-link">
-                    Events
-                    <span id="events-badge" class="badge" style="display: none;">0</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>Events</span>
+                    <span class="badge" id="unread-count" style="display: none;">0</span>
                 </a>
             </nav>
         </header>
 
         <main class="main">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h1>Your Basket</h1>
-                <button id="checkout-btn" class="btn btn-success" style="display: none;">
-                    🛒 Checkout
-                </button>
+            <h1 class="page-title">Basket</h1>
+            
+            <div id="processing-section" style="display: none;">
+                <div class="processing-section">
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                        Processing
+                    </h3>
+                    <div id="processing-items" class="book-list"></div>
+                </div>
             </div>
 
-            <!-- Processing Section -->
-            <div id="processing-section" class="processing-section" style="display: none;">
-                <h3>📦 Processing</h3>
-                <div id="processing-list" class="book-list"></div>
-            </div>
-
-            <!-- Basket Section -->
-            <div id="basket-container">
+            <div id="basket-content">
                 <div class="loading"><div class="spinner"></div>Loading basket...</div>
             </div>
         </main>
     </div>
 
+    <div class="toast-container" id="toast-container"></div>
     <script src="/static/js/app.js"></script>
     <script>
-        const basketContainer = document.getElementById('basket-container');
+        const basketContent = document.getElementById('basket-content');
         const processingSection = document.getElementById('processing-section');
-        const processingList = document.getElementById('processing-list');
-        const checkoutBtn = document.getElementById('checkout-btn');
+        const processingItems = document.getElementById('processing-items');
 
         async function loadBasket() {
             try {
-                const [basketData, processingData] = await Promise.all([
-                    api('/basket'),
-                    api('/processing'),
-                ]);
-
-                // Show processing section if items are being processed
-                if (processingData.items.length > 0) {
-                    processingSection.style.display = 'block';
-                    let html = '';
-                    for (const item of processingData.items) {
-                        const authors = item.book.authors.length > 0 ? item.book.authors.join(', ') : 'Unknown Author';
-                        const statusClass = `status-${item.status.toLowerCase()}`;
-                        html += `
-                            <div class="book-item">
-                                <div class="book-info">
-                                    <div class="book-title">${escapeHtml(item.book.title)}</div>
-                                    <div class="book-author">${escapeHtml(authors)}</div>
-                                    <div style="margin-top: 0.5rem;">
-                                        <span class="status ${statusClass}">${item.status}</span>
-                                        <span style="color: var(--text-muted); margin-left: 0.5rem; font-size: 0.9rem;">
-                                            ${escapeHtml(item.progress_message)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    processingList.innerHTML = html;
-                } else {
-                    processingSection.style.display = 'none';
-                }
-
-                // Show basket items
-                if (basketData.items.length === 0) {
-                    basketContainer.innerHTML = `
-                        <div class="empty-state">
-                            <h2>🛒 Your Basket is Empty</h2>
-                            <p>Search for books and add them to your basket.</p>
-                            <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Search Books</a>
-                        </div>
-                    `;
-                    checkoutBtn.style.display = 'none';
-                    return;
-                }
-
-                checkoutBtn.style.display = 'block';
-
-                let html = '<div class="book-list">';
-                for (const item of basketData.items) {
-                    const authors = item.book.authors.length > 0 ? item.book.authors.join(', ') : 'Unknown Author';
-                    html += `
-                        <div class="book-item">
-                            <div class="book-info">
-                                <div class="book-title">${escapeHtml(item.book.title)}</div>
-                                <div class="book-author">${escapeHtml(authors)}</div>
-                                <div class="book-meta">
-                                    <span>Added ${formatRelativeTime(item.added_at)}</span>
-                                </div>
-                            </div>
-                            <div class="book-actions">
-                                <button class="btn btn-danger btn-sm remove-btn" data-id="${item.book.id}">
-                                    Remove
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }
-                html += '</div>';
-                basketContainer.innerHTML = html;
-
-                // Add remove button listeners
-                document.querySelectorAll('.remove-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const bookId = e.target.dataset.id;
-                        await removeFromBasket(bookId);
-                    });
-                });
-
-            } catch (e) {
-                basketContainer.innerHTML = `
-                    <div class="empty-state">
-                        <h2>Error</h2>
-                        <p>${escapeHtml(e.message)}</p>
-                    </div>
-                `;
+                const data = await api.getBasket();
+                renderBasket(data);
+            } catch (error) {
+                basketContent.innerHTML = `<div class="empty-state"><h2>Error loading basket</h2><p>${error.message}</p></div>`;
             }
+        }
+
+        function renderBasket(data) {
+            // Render processing items
+            if (data.processing && data.processing.length > 0) {
+                processingSection.style.display = 'block';
+                processingItems.innerHTML = data.processing.map(item => `
+                    <div class="book-item">
+                        <div class="book-info">
+                            <div class="book-title">${escapeHtml(item.book.title)}</div>
+                            <div class="book-meta">
+                                <span class="status status-${item.status}">${item.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                processingSection.style.display = 'none';
+            }
+
+            // Render basket items
+            if (!data.items || data.items.length === 0) {
+                basketContent.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        <h2>Your basket is empty</h2>
+                        <p>Search for books and add them to your basket.</p>
+                        <a href="/" class="btn btn-primary">Search Books</a>
+                    </div>`;
+                return;
+            }
+
+            const booksHtml = data.items.map(item => `
+                <div class="book-item">
+                    <div class="book-info">
+                        <div class="book-title">${escapeHtml(item.book.title)}</div>
+                        <div class="book-author">${item.book.authors.map(a => escapeHtml(a)).join(', ') || 'Unknown Author'}</div>
+                        <div class="book-meta">
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                ${item.book.download_count.toLocaleString()} downloads
+                            </span>
+                            <span>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                                ${item.book.languages.join(', ')}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="book-actions">
+                        <button class="btn btn-danger btn-sm remove-btn" data-book-id="${item.book.id}">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Remove
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            basketContent.innerHTML = `
+                <div class="book-list">${booksHtml}</div>
+                <div style="margin-top: 24px; display: flex; gap: 8px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="clearBasketBtn">Clear All</button>
+                    <button class="btn btn-success" id="checkoutBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Process ${data.items.length} Book${data.items.length !== 1 ? 's' : ''}
+                    </button>
+                </div>`;
+
+            // Attach event listeners for remove buttons
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookId = parseInt(this.dataset.bookId);
+                    removeFromBasket(bookId);
+                });
+            });
+
+            // Attach event listeners for clear and checkout buttons
+            document.getElementById('clearBasketBtn')?.addEventListener('click', clearBasket);
+            document.getElementById('checkoutBtn')?.addEventListener('click', checkout);
         }
 
         async function removeFromBasket(bookId) {
             try {
-                const result = await api(`/basket/${bookId}`, { method: 'DELETE' });
-                if (result.success) {
-                    showToast('Removed from basket', 'success');
-                    loadBasket();
-                    updateBasketCount();
-                }
-            } catch (e) {
-                showToast(e.message, 'error');
+                await api.removeFromBasket(bookId);
+                showToast('Removed from basket', 'success');
+                loadBasket();
+                updateBasketCount();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function clearBasket() {
+            try {
+                await api.clearBasket();
+                showToast('Basket cleared', 'success');
+                loadBasket();
+                updateBasketCount();
+            } catch (error) {
+                showToast(error.message, 'error');
             }
         }
 
         async function checkout() {
-            checkoutBtn.disabled = true;
-            checkoutBtn.textContent = 'Processing...';
-
             try {
-                const result = await api('/checkout', { method: 'POST' });
-                showToast(result.message, 'success');
+                await api.checkout();
+                showToast('Processing started!', 'success');
                 loadBasket();
                 updateBasketCount();
-            } catch (e) {
-                showToast(e.message, 'error');
-            } finally {
-                checkoutBtn.disabled = false;
-                checkoutBtn.textContent = '🛒 Checkout';
+            } catch (error) {
+                showToast(error.message, 'error');
             }
         }
 
-        checkoutBtn.addEventListener('click', checkout);
-
-        // Initial load
-        loadBasket();
-
         // Poll for processing updates
-        setInterval(loadBasket, 5000);
+        setInterval(() => {
+            if (processingSection.style.display !== 'none') {
+                loadBasket();
+            }
+        }, 3000);
+
+        loadBasket();
+        updateBasketCount();
+        updateUnreadCount();
     </script>
 </body>
 </html>

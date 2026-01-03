@@ -116,3 +116,6 @@ node_modules/
 *.pyd
 
 # End of file
+# App data directories
+books/
+data/

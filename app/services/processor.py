@@ -85,6 +85,13 @@ class BookProcessor:
                 # Non-fatal: log and continue
                 print(f"Warning: embedding images failed for {book.id}: {e}")
 
+            # Convert relative URLs to absolute for audio/other media links
+            try:
+                markdown_content = self._absolutize_links(markdown_content, base_url)
+            except Exception as e:
+                # Non-fatal: log and continue
+                print(f"Warning: absolutizing links failed for {book.id}: {e}")
+
             # Update status: fixing
             await state.update_processing_status(
                 book.id,
@@ -260,11 +267,40 @@ class BookProcessor:
         content = re.sub(r"<body[^>]*>", "", content, flags=re.IGNORECASE)
         content = re.sub(r"</body>", "", content, flags=re.IGNORECASE)
 
-        # Convert headings
+        def convert_heading(match, level):
+            """Convert an HTML heading to markdown, preserving anchor IDs."""
+            attrs = match.group(1)  # Attributes of the heading tag
+            inner = match.group(2)  # Inner content of the heading
+            
+            # Extract id from heading tag attributes
+            heading_id = None
+            id_match = re.search(r'id=["\']([^"\']+)["\']', attrs, re.IGNORECASE)
+            if id_match:
+                heading_id = id_match.group(1)
+            
+            # Also look for anchor tags with id inside the heading content
+            if not heading_id:
+                anchor_match = re.search(r'<a[^>]*id=["\']([^"\']+)["\'][^>]*>', inner, re.IGNORECASE)
+                if anchor_match:
+                    heading_id = anchor_match.group(1)
+            
+            # Remove any remaining HTML tags from inner content
+            text = re.sub(r'<[^>]+>', '', inner).strip()
+            
+            # Build markdown heading with optional anchor
+            hashes = '#' * level
+            if heading_id and text:
+                return f'{hashes} {text} {{#{heading_id}}}\n\n'
+            elif text:
+                return f'{hashes} {text}\n\n'
+            else:
+                return ''  # Skip empty headings
+
+        # Convert headings, capturing attributes and content separately
         for i in range(1, 7):
             content = re.sub(
-                rf"<h{i}[^>]*>(.*?)</h{i}>",
-                lambda m: f"{'#' * i} {m.group(1).strip()}\n\n",
+                rf"<h{i}([^>]*)>(.*?)</h{i}>",
+                lambda m, level=i: convert_heading(m, level),
                 content,
                 flags=re.IGNORECASE | re.DOTALL,
             )
@@ -275,11 +311,21 @@ class BookProcessor:
         # Convert line breaks
         content = re.sub(r"<br\s*/?>", "\n", content, flags=re.IGNORECASE)
 
-        # Convert bold
-        content = re.sub(r"<(b|strong)[^>]*>(.*?)</\1>", r"**\2**", content, flags=re.IGNORECASE | re.DOTALL)
+        # Convert bold - strip internal whitespace to avoid **\ntext**
+        def convert_bold(match):
+            inner = match.group(2).strip()
+            if inner:
+                return f"**{inner}**"
+            return ''
+        content = re.sub(r"<(b|strong)[^>]*>(.*?)</\1>", convert_bold, content, flags=re.IGNORECASE | re.DOTALL)
 
-        # Convert italic
-        content = re.sub(r"<(i|em)[^>]*>(.*?)</\1>", r"*\2*", content, flags=re.IGNORECASE | re.DOTALL)
+        # Convert italic - strip internal whitespace
+        def convert_italic(match):
+            inner = match.group(2).strip()
+            if inner:
+                return f"*{inner}*"
+            return ''
+        content = re.sub(r"<(i|em)[^>]*>(.*?)</\1>", convert_italic, content, flags=re.IGNORECASE | re.DOTALL)
 
         # Convert links
         content = re.sub(r'<a[^>]*href=["\']([^"\']*)["\'][^>]*>(.*?)</a>', r"[\2](\1)", content, flags=re.IGNORECASE | re.DOTALL)
@@ -289,6 +335,16 @@ class BookProcessor:
                 r"![\2](\1)", content, flags=re.IGNORECASE)
         content = re.sub(r'<img[^>]*src=["\']([^"\']*)["\'][^>]*/?>',
                 r"![image](\1)", content, flags=re.IGNORECASE)
+
+        # Convert standalone anchor tags to markdown anchor format
+        # These are used by Gutenberg for TOC links: <a name="linkXXX"> or <a id="linkXXX">
+        # Handle anchors that may contain whitespace, comments, or nothing
+        content = re.sub(r'<a[^>]*(?:name|id)=["\']([^"\']+)["\'][^>]*>(?:\s|<!--[^>]*-->)*</a>',
+                r'{#\1}', content, flags=re.IGNORECASE)
+        # Also handle anchors with actual text content inside
+        content = re.sub(r'<a[^>]*(?:name|id)=["\']([^"\']+)["\'][^>]*>([^<]+)</a>',
+                lambda m: f'{{#{m.group(1)}}} {m.group(2).strip()}' if m.group(2).strip() else f'{{#{m.group(1)}}}',
+                content, flags=re.IGNORECASE)
 
         # Remove remaining tags
         content = re.sub(r"<[^>]+>", "", content)
@@ -374,6 +430,36 @@ class BookProcessor:
 
         return markdown
 
+    def _absolutize_links(self, markdown: str, base_url: Optional[str]) -> str:
+        """Convert relative URLs in markdown links to absolute URLs.
+        
+        This handles non-image links like audio files (mp3, ogg, etc.) that
+        should point to the original Gutenberg URLs.
+        """
+        if not base_url:
+            return markdown
+
+        def replace_link(match):
+            text = match.group(1)
+            url = match.group(2).strip()
+            
+            # Skip if already absolute, data URL, or anchor-only
+            if url.startswith(('http://', 'https://', 'data:', '#', 'mailto:')):
+                return match.group(0)
+            
+            # Resolve relative URL against base
+            try:
+                absolute = urljoin(base_url, url)
+                return f"[{text}]({absolute})"
+            except Exception:
+                return match.group(0)
+
+        # Match markdown links (but not images which start with !)
+        # Pattern: [text](url) where it's not preceded by !
+        markdown = re.sub(r'(?<!!)\[([^\]]+)\]\(([^)]+)\)', replace_link, markdown)
+
+        return markdown
+
     async def _fix_markdown(self, markdown: str) -> str:
         """Apply fixes to ensure strict/clean Markdown."""
         # Remove page break markers
@@ -381,6 +467,17 @@ class BookProcessor:
 
         # Fix multiple blank lines
         markdown = re.sub(r"\n{3,}", "\n\n", markdown)
+
+        # Fix broken bold markers (** on one line, content** on another)
+        # This happens when nested tags create empty bold spans
+        markdown = re.sub(r'\*\*\s*\n+\s*([^*\n]+)\*\*', r'**\1**', markdown)
+        
+        # Also fix italic markers similarly
+        markdown = re.sub(r'\*\s*\n+\s*([^*\n]+)\*', r'*\1*', markdown)
+        
+        # Remove orphaned bold/italic markers on their own lines
+        markdown = re.sub(r'^\*\*\s*$', '', markdown, flags=re.MULTILINE)
+        markdown = re.sub(r'^\*\s*$', '', markdown, flags=re.MULTILINE)
 
         # Ensure headings have blank line after
         markdown = re.sub(r"(^#{1,6} .+)(\n)([^\n])", r"\1\n\n\3", markdown, flags=re.MULTILINE)

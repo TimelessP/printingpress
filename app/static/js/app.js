@@ -18,7 +18,7 @@ function showToast(message, type = 'info') {
 }
 
 // API helpers
-async function api(endpoint, options = {}) {
+async function apiRequest(endpoint, options = {}) {
     const response = await fetch(`/api${endpoint}`, {
         headers: {
             'Content-Type': 'application/json',
@@ -32,18 +32,49 @@ async function api(endpoint, options = {}) {
         throw new Error(error.detail || 'Request failed');
     }
 
-    return response.json();
+    // Handle empty responses (e.g., DELETE requests)
+    const text = await response.text();
+    if (!text) {
+        return { success: true };
+    }
+    return JSON.parse(text);
 }
+
+// API object with all methods
+const api = {
+    // Search (Gutenberg)
+    search: (query, page = 1) => apiRequest(`/gutenberg/search?q=${encodeURIComponent(query)}&page=${page}`),
+    
+    // Basket
+    getBasket: () => apiRequest('/basket'),
+    addToBasket: (bookId) => apiRequest('/basket', { method: 'POST', body: JSON.stringify({ book_id: bookId }) }),
+    removeFromBasket: (bookId) => apiRequest(`/basket/${bookId}`, { method: 'DELETE' }),
+    clearBasket: () => apiRequest('/basket', { method: 'DELETE' }),
+    checkout: () => apiRequest('/checkout', { method: 'POST' }),
+    
+    // Library
+    getLibrary: () => apiRequest('/library'),
+    getBook: (bookId) => apiRequest(`/library/book/${bookId}`),
+    deleteBook: (bookId) => apiRequest(`/library/book/${bookId}`, { method: 'DELETE' }),
+    saveBookPosition: (bookId, position) => apiRequest(`/bookmarks/${bookId}`, { method: 'POST', body: JSON.stringify({ text_position: position }) }),
+    deleteBookmark: (bookId) => apiRequest(`/bookmarks/${bookId}`, { method: 'DELETE' }),
+    
+    // Events
+    getEvents: () => apiRequest('/events'),
+    markEventRead: (eventId) => apiRequest(`/events/${eventId}/read`, { method: 'POST' }),
+    markAllEventsRead: () => apiRequest('/events/read-all', { method: 'POST' }),
+    clearAllEvents: () => apiRequest('/events', { method: 'DELETE' }),
+};
 
 // Update unread count in nav
 async function updateUnreadCount() {
     try {
-        const data = await api('/events/unread-count');
-        const badge = document.getElementById('events-badge');
+        const data = await apiRequest('/events/unread-count');
+        const badge = document.getElementById('unread-count');
         if (badge) {
             if (data.count > 0) {
                 badge.textContent = data.count;
-                badge.style.display = 'block';
+                badge.style.display = 'inline-flex';
             } else {
                 badge.style.display = 'none';
             }
@@ -56,12 +87,13 @@ async function updateUnreadCount() {
 // Update basket count in nav
 async function updateBasketCount() {
     try {
-        const data = await api('/basket');
-        const badge = document.getElementById('basket-badge');
+        const data = await apiRequest('/basket');
+        const badge = document.getElementById('basket-count');
         if (badge) {
-            if (data.count > 0) {
-                badge.textContent = data.count;
-                badge.style.display = 'block';
+            const count = data.items ? data.items.length : 0;
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.display = 'inline-flex';
             } else {
                 badge.style.display = 'none';
             }
@@ -104,10 +136,42 @@ function escapeHtml(text) {
 function markdownToHtml(markdown) {
     let html = escapeHtml(markdown);
 
-    // Headers
-    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // Handle extended markdown heading syntax with ID: ## Title {#anchor-id}
+    // Also generates IDs from heading text if none provided
+    function convertHeading(match, hashes, text) {
+        const level = hashes.length;
+        let id = '';
+        let title = text.trim();
+        
+        // Check for explicit ID syntax {#id}
+        const idMatch = title.match(/\s*\{#([^}]+)\}\s*$/);
+        if (idMatch) {
+            id = idMatch[1];
+            title = title.replace(/\s*\{#[^}]+\}\s*$/, '').trim();
+        } else {
+            // Generate ID from title text (slug format)
+            id = title.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '')
+                .substring(0, 50);
+        }
+        
+        if (title) {
+            return `<h${level} id="${id}">${title}</h${level}>`;
+        }
+        return '';  // Skip empty headings
+    }
+    
+    // Headers with optional {#id} syntax - process from h3 down to h1
+    html = html.replace(/^(###) (.+)$/gm, convertHeading);
+    html = html.replace(/^(##) (.+)$/gm, convertHeading);
+    html = html.replace(/^(#) (.+)$/gm, convertHeading);
+    
+    // Remove standalone hash marks (malformed headings from bad conversion)
+    html = html.replace(/^#{1,6}\s*$/gm, '');
+
+    // Convert standalone anchor markers {#id} to span anchors
+    html = html.replace(/\{#([^}]+)\}/g, '<span id="$1"></span>');
 
     // Bold and italic
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -127,7 +191,7 @@ function markdownToHtml(markdown) {
     html = html.replace(/\n\n+/g, '</p><p>');
     html = '<p>' + html + '</p>';
     html = html.replace(/<p><\/p>/g, '');
-    html = html.replace(/<p>(<h[1-6]>)/g, '$1');
+    html = html.replace(/<p>(<h[1-6])/g, '$1');
     html = html.replace(/(<\/h[1-6]>)<\/p>/g, '$1');
     html = html.replace(/<p>(<hr>)<\/p>/g, '$1');
 

@@ -72,3 +72,12 @@ async def mark_all_events_read():
     await state.mark_all_events_read()
 
     return MessageResponse(message="All events marked as read", success=True)
+
+
+@router.delete("/events", response_model=MessageResponse)
+async def clear_all_events():
+    """Clear all events."""
+    state = get_state_manager()
+    await state.clear_all_events()
+
+    return MessageResponse(message="All events cleared", success=True)

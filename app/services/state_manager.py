@@ -89,14 +89,13 @@ class StateManager:
             await self._save_state_unlocked()
 
     async def _save_library(self) -> None:
-        """Save library index to disk."""
-        async with self._lock:
-            data = [entry.model_dump() for entry in self._library]
-            # Convert datetime objects to ISO strings for JSON serialization
-            self.index_file.write_text(
-                json.dumps(data, indent=2, default=str),
-                encoding="utf-8",
-            )
+        """Save library index to disk. Must be called with lock held."""
+        data = [entry.model_dump() for entry in self._library]
+        # Convert datetime objects to ISO strings for JSON serialization
+        self.index_file.write_text(
+            json.dumps(data, indent=2, default=str),
+            encoding="utf-8",
+        )
 
     # --- Basket operations ---
 
@@ -180,6 +179,11 @@ class StateManager:
         async with self._lock:
             return list(self._library)
 
+    async def get_library_ids(self) -> set[int]:
+        """Get set of all book IDs in the library."""
+        async with self._lock:
+            return {entry.id for entry in self._library}
+
     async def get_library_entry(self, book_id: int) -> Optional[LibraryEntry]:
         """Get a specific library entry by book ID."""
         async with self._lock:
@@ -198,7 +202,7 @@ class StateManager:
                     break
             else:
                 self._library.append(entry)
-        await self._save_library()
+            await self._save_library()
 
     async def remove_from_library(self, book_id: int) -> bool:
         """Remove a library entry and its file from disk. Returns True if removed."""
@@ -269,6 +273,12 @@ class StateManager:
         async with self._lock:
             for event in self._state.events:
                 event.read = True
+            await self._save_state_unlocked()
+
+    async def clear_all_events(self) -> None:
+        """Clear all events."""
+        async with self._lock:
+            self._state.events.clear()
             await self._save_state_unlocked()
 
     # --- Bookmark operations ---

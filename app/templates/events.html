@@ -9,145 +9,204 @@
 <body>
     <div class="app-container">
         <header class="header">
-            <a href="/" class="logo">📚 Printing Press</a>
+            <a href="/" class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                Printing Press
+            </a>
             <nav class="nav">
-                <a href="/" class="nav-link">Search</a>
-                <a href="/basket" class="nav-link">
-                    Basket
-                    <span id="basket-badge" class="badge" style="display: none;">0</span>
+                <a href="/" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    <span>Search</span>
                 </a>
-                <a href="/library" class="nav-link">Library</a>
+                <a href="/basket" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span>Basket</span>
+                    <span class="badge" id="basket-count" style="display: none;">0</span>
+                </a>
+                <a href="/library" class="nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <span>Library</span>
+                </a>
                 <a href="/events" class="nav-link active">
-                    Events
-                    <span id="events-badge" class="badge" style="display: none;">0</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span>Events</span>
+                    <span class="badge" id="unread-count" style="display: none;">0</span>
                 </a>
             </nav>
         </header>
 
         <main class="main">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h1>Events</h1>
-                <button id="mark-all-read-btn" class="btn btn-secondary btn-sm" style="display: none;">
-                    Mark All as Read
-                </button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h1 class="page-title" style="margin-bottom: 0;">Events</h1>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary btn-sm" id="mark-all-read" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Mark all read
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="clear-all" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Clear all
+                    </button>
+                </div>
             </div>
-
-            <div id="events-container">
+            
+            <div id="events-content">
                 <div class="loading"><div class="spinner"></div>Loading events...</div>
             </div>
         </main>
     </div>
 
+    <div class="toast-container" id="toast-container"></div>
     <script src="/static/js/app.js"></script>
     <script>
-        const eventsContainer = document.getElementById('events-container');
-        const markAllReadBtn = document.getElementById('mark-all-read-btn');
+        const eventsContent = document.getElementById('events-content');
+        const markAllReadBtn = document.getElementById('mark-all-read');
+        const clearAllBtn = document.getElementById('clear-all');
 
         async function loadEvents() {
             try {
-                const data = await api('/events');
+                const data = await api.getEvents();
+                renderEvents(data);
+            } catch (error) {
+                eventsContent.innerHTML = `<div class="empty-state"><h2>Error loading events</h2><p>${error.message}</p></div>`;
+            }
+        }
 
-                if (data.events.length === 0) {
-                    eventsContainer.innerHTML = `
-                        <div class="empty-state">
-                            <h2>📬 No Events Yet</h2>
-                            <p>Your notifications will appear here when books finish processing.</p>
-                        </div>
-                    `;
-                    markAllReadBtn.style.display = 'none';
-                    return;
-                }
-
-                if (data.unread_count > 0) {
-                    markAllReadBtn.style.display = 'block';
-                } else {
-                    markAllReadBtn.style.display = 'none';
-                }
-
-                let html = '<div class="card"><div class="card-body" style="padding: 0;">';
-
-                for (const event of data.events) {
-                    const unreadClass = event.read ? '' : 'unread';
-                    let iconClass = 'info';
-                    let icon = 'ℹ️';
-
-                    if (event.event_type === 'book_ready') {
-                        iconClass = 'book-ready';
-                        icon = '✅';
-                    } else if (event.event_type === 'processing_failed') {
-                        iconClass = 'processing-failed';
-                        icon = '❌';
-                    }
-
-                    html += `
-                        <div class="event-item ${unreadClass}" data-id="${event.id}">
-                            <div class="event-icon ${iconClass}">${icon}</div>
-                            <div class="event-content">
-                                <div class="event-title">${escapeHtml(event.title)}</div>
-                                <div class="event-message">${escapeHtml(event.message)}</div>
-                                <div class="event-time">${formatRelativeTime(event.created_at)}</div>
-                            </div>
-                            ${event.book_id && event.event_type === 'book_ready' ? `
-                                <a href="/read/${event.book_id}" class="btn btn-primary btn-sm">Read</a>
-                            ` : ''}
-                            ${!event.read ? `
-                                <button class="btn btn-secondary btn-sm mark-read-btn" data-id="${event.id}">
-                                    Mark Read
-                                </button>
-                            ` : ''}
-                        </div>
-                    `;
-                }
-
-                html += '</div></div>';
-                eventsContainer.innerHTML = html;
-
-                // Add mark read button listeners
-                document.querySelectorAll('.mark-read-btn').forEach(btn => {
-                    btn.addEventListener('click', async (e) => {
-                        const eventId = e.target.dataset.id;
-                        await markEventRead(eventId);
-                    });
-                });
-
-            } catch (e) {
-                eventsContainer.innerHTML = `
+        function renderEvents(data) {
+            if (!data.events || data.events.length === 0) {
+                eventsContent.innerHTML = `
                     <div class="empty-state">
-                        <h2>Error</h2>
-                        <p>${escapeHtml(e.message)}</p>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <h2>No events yet</h2>
+                        <p>Events will appear here when books are processed.</p>
+                    </div>`;
+                markAllReadBtn.style.display = 'none';
+                clearAllBtn.style.display = 'none';
+                return;
+            }
+
+            const hasUnread = data.events.some(e => !e.read);
+            markAllReadBtn.style.display = hasUnread ? 'flex' : 'none';
+            clearAllBtn.style.display = 'flex';
+
+            const eventsHtml = data.events.map(event => {
+                let iconClass = 'info';
+                let iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>`;
+                
+                if (event.event_type === 'book_ready') {
+                    iconClass = 'book-ready';
+                    iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>`;
+                } else if (event.event_type === 'processing_failed') {
+                    iconClass = 'processing-failed';
+                    iconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>`;
+                }
+
+                // Show Read button for book_ready events
+                const readButton = (event.event_type === 'book_ready' && event.book_id)
+                    ? `<a href="/read/${event.book_id}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                            Read
+                        </a>`
+                    : '';
+
+                return `
+                    <div class="event-item ${event.read ? '' : 'unread'}" data-event-id="${event.id}">
+                        <div class="event-icon ${iconClass}">${iconSvg}</div>
+                        <div class="event-content">
+                            <div class="event-title">${escapeHtml(event.title)}</div>
+                            <div class="event-message">${escapeHtml(event.message)}</div>
+                            <div class="event-time">${new Date(event.created_at).toLocaleString()}</div>
+                        </div>
+                        ${readButton ? `<div class="event-actions">${readButton}</div>` : ''}
                     </div>
                 `;
-            }
+            }).join('');
+
+            eventsContent.innerHTML = `<div class="card">${eventsHtml}</div>`;
+
+            // Attach event listeners for marking events as read
+            document.querySelectorAll('.event-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const eventId = this.dataset.eventId;
+                    markAsRead(eventId);
+                });
+            });
         }
 
-        async function markEventRead(eventId) {
+        async function markAsRead(eventId) {
             try {
-                await api(`/events/${eventId}/read`, { method: 'POST' });
+                await api.markEventRead(eventId);
                 loadEvents();
                 updateUnreadCount();
-            } catch (e) {
-                showToast(e.message, 'error');
+            } catch (error) {
+                console.error('Failed to mark event as read:', error);
             }
         }
 
-        async function markAllRead() {
+        async function markAllAsRead() {
             try {
-                await api('/events/read-all', { method: 'POST' });
+                await api.markAllEventsRead();
+                loadEvents();
+                updateUnreadCount();
                 showToast('All events marked as read', 'success');
-                loadEvents();
-                updateUnreadCount();
-            } catch (e) {
-                showToast(e.message, 'error');
+            } catch (error) {
+                showToast(error.message, 'error');
             }
         }
 
-        markAllReadBtn.addEventListener('click', markAllRead);
+        async function clearAll() {
+            try {
+                await api.clearAllEvents();
+                loadEvents();
+                updateUnreadCount();
+                showToast('All events cleared', 'success');
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
 
-        // Initial load
+        markAllReadBtn.addEventListener('click', markAllAsRead);
+        clearAllBtn.addEventListener('click', clearAll);
+
         loadEvents();
-
-        // Poll for updates
-        setInterval(loadEvents, 10000);
+        updateBasketCount();
+        updateUnreadCount();
     </script>
 </body>
 </html>
