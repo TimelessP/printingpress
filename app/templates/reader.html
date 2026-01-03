@@ -131,11 +131,12 @@
         async function loadBook() {
             try {
                 const data = await api.getBook(bookId);
-                readerTitle.textContent = data.title;
-                document.title = `${data.title} - Printing Press`;
+                // API returns { entry, content, bookmark }
+                readerTitle.textContent = data.entry.title;
+                document.title = `${data.entry.title} - Printing Press`;
                 currentContent = data.content;
-                savedScrollPosition = data.scroll_position;
-                hasBookmark = savedScrollPosition !== null && savedScrollPosition !== undefined;
+                savedScrollPosition = data.bookmark ? data.bookmark.text_position : null;
+                hasBookmark = data.bookmark !== null && data.bookmark !== undefined;
                 
                 renderContent();
                 updateBookmarkButton();
