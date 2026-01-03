@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basket - Printing Press</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <a href="/" class="logo">📚 Printing Press</a>
+            <nav class="nav">
+                <a href="/" class="nav-link">Search</a>
+                <a href="/basket" class="nav-link active">
+                    Basket
+                    <span id="basket-badge" class="badge" style="display: none;">0</span>
+                </a>
+                <a href="/library" class="nav-link">Library</a>
+                <a href="/events" class="nav-link">
+                    Events
+                    <span id="events-badge" class="badge" style="display: none;">0</span>
+                </a>
+            </nav>
+        </header>
+
+        <main class="main">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h1>Your Basket</h1>
+                <button id="checkout-btn" class="btn btn-success" style="display: none;">
+                    🛒 Checkout
+                </button>
+            </div>
+
+            <!-- Processing Section -->
+            <div id="processing-section" class="processing-section" style="display: none;">
+                <h3>📦 Processing</h3>
+                <div id="processing-list" class="book-list"></div>
+            </div>
+
+            <!-- Basket Section -->
+            <div id="basket-container">
+                <div class="loading"><div class="spinner"></div>Loading basket...</div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        const basketContainer = document.getElementById('basket-container');
+        const processingSection = document.getElementById('processing-section');
+        const processingList = document.getElementById('processing-list');
+        const checkoutBtn = document.getElementById('checkout-btn');
+
+        async function loadBasket() {
+            try {
+                const [basketData, processingData] = await Promise.all([
+                    api('/basket'),
+                    api('/processing'),
+                ]);
+
+                // Show processing section if items are being processed
+                if (processingData.items.length > 0) {
+                    processingSection.style.display = 'block';
+                    let html = '';
+                    for (const item of processingData.items) {
+                        const authors = item.book.authors.length > 0 ? item.book.authors.join(', ') : 'Unknown Author';
+                        const statusClass = `status-${item.status.toLowerCase()}`;
+                        html += `
+                            <div class="book-item">
+                                <div class="book-info">
+                                    <div class="book-title">${escapeHtml(item.book.title)}</div>
+                                    <div class="book-author">${escapeHtml(authors)}</div>
+                                    <div style="margin-top: 0.5rem;">
+                                        <span class="status ${statusClass}">${item.status}</span>
+                                        <span style="color: var(--text-muted); margin-left: 0.5rem; font-size: 0.9rem;">
+                                            ${escapeHtml(item.progress_message)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    processingList.innerHTML = html;
+                } else {
+                    processingSection.style.display = 'none';
+                }
+
+                // Show basket items
+                if (basketData.items.length === 0) {
+                    basketContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h2>🛒 Your Basket is Empty</h2>
+                            <p>Search for books and add them to your basket.</p>
+                            <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Search Books</a>
+                        </div>
+                    `;
+                    checkoutBtn.style.display = 'none';
+                    return;
+                }
+
+                checkoutBtn.style.display = 'block';
+
+                let html = '<div class="book-list">';
+                for (const item of basketData.items) {
+                    const authors = item.book.authors.length > 0 ? item.book.authors.join(', ') : 'Unknown Author';
+                    html += `
+                        <div class="book-item">
+                            <div class="book-info">
+                                <div class="book-title">${escapeHtml(item.book.title)}</div>
+                                <div class="book-author">${escapeHtml(authors)}</div>
+                                <div class="book-meta">
+                                    <span>Added ${formatRelativeTime(item.added_at)}</span>
+                                </div>
+                            </div>
+                            <div class="book-actions">
+                                <button class="btn btn-danger btn-sm remove-btn" data-id="${item.book.id}">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                basketContainer.innerHTML = html;
+
+                // Add remove button listeners
+                document.querySelectorAll('.remove-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const bookId = e.target.dataset.id;
+                        await removeFromBasket(bookId);
+                    });
+                });
+
+            } catch (e) {
+                basketContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h2>Error</h2>
+                        <p>${escapeHtml(e.message)}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function removeFromBasket(bookId) {
+            try {
+                const result = await api(`/basket/${bookId}`, { method: 'DELETE' });
+                if (result.success) {
+                    showToast('Removed from basket', 'success');
+                    loadBasket();
+                    updateBasketCount();
+                }
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        async function checkout() {
+            checkoutBtn.disabled = true;
+            checkoutBtn.textContent = 'Processing...';
+
+            try {
+                const result = await api('/checkout', { method: 'POST' });
+                showToast(result.message, 'success');
+                loadBasket();
+                updateBasketCount();
+            } catch (e) {
+                showToast(e.message, 'error');
+            } finally {
+                checkoutBtn.disabled = false;
+                checkoutBtn.textContent = '🛒 Checkout';
+            }
+        }
+
+        checkoutBtn.addEventListener('click', checkout);
+
+        // Initial load
+        loadBasket();
+
+        // Poll for processing updates
+        setInterval(loadBasket, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+{
+  "basket": [],
+  "processing": [],
+  "events": [
+    {
+      "id": "edbe24ea-1832-458e-a827-9ca45c86b489",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'Our polar flight' has been added to your library.",
+      "book_id": 71497,
+      "created_at": "2026-01-03T12:03:54.982257",
+      "read": false
+    },
+    {
+      "id": "cf38ce55-b1e5-4746-aac5-407c44f45a60",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The South Pole; an account of the Norwegian Antarctic expedition in the \"Fram,\" 1910-12 — Volume 1 and Volume 2' has been added to your library.",
+      "book_id": 4229,
+      "created_at": "2026-01-03T12:03:45.261702",
+      "read": true
+    },
+    {
+      "id": "4d6cf97e-6e68-46b1-9970-660e5652e3eb",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'Indian Tales' has been added to your library.",
+      "book_id": 8649,
+      "created_at": "2026-01-03T12:03:45.112577",
+      "read": true
+    },
+    {
+      "id": "67b6a6f3-a693-494c-8ec7-dde95eb47513",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'Life's Handicap: Being Stories of Mine Own People' has been added to your library.",
+      "book_id": 5777,
+      "created_at": "2026-01-03T12:03:44.981965",
+      "read": true
+    },
+    {
+      "id": "443a01c2-54a1-4e71-972f-7ea184ca4b28",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The Day's Work' has been added to your library.",
+      "book_id": 2569,
+      "created_at": "2026-01-03T12:03:44.913530",
+      "read": true
+    },
+    {
+      "id": "327745ce-6226-436f-a675-298dc37047c5",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'Kim' has been added to your library.",
+      "book_id": 2226,
+      "created_at": "2026-01-03T12:03:44.809900",
+      "read": true
+    },
+    {
+      "id": "00647123-7206-4f28-8da0-61f9ffa4fdf6",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The Phantom 'Rickshaw, and Other Ghost Stories' has been added to your library.",
+      "book_id": 2806,
+      "created_at": "2026-01-03T12:03:44.746899",
+      "read": true
+    },
+    {
+      "id": "e449d60a-6957-449c-905a-9fefd3c7e5d3",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The South Pole; an account of the Norwegian Antarctic expedition in the \"Fram,\" 1910-1912 — Volume 1' has been added to your library.",
+      "book_id": 3414,
+      "created_at": "2026-01-03T12:03:44.714951",
+      "read": true
+    },
+    {
+      "id": "11bda991-4c8c-4fa6-96cc-7ccebd10e68d",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'Just so stories' has been added to your library.",
+      "book_id": 2781,
+      "created_at": "2026-01-03T12:03:44.629023",
+      "read": true
+    },
+    {
+      "id": "9649e827-9da2-474b-9889-279499d77505",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The Second Jungle Book' has been added to your library.",
+      "book_id": 1937,
+      "created_at": "2026-01-03T12:03:44.234774",
+      "read": true
+    },
+    {
+      "id": "ab4f4c3d-cbd6-4619-bcc7-f072bd4b1499",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The Man Who Would Be King' has been added to your library.",
+      "book_id": 8147,
+      "created_at": "2026-01-03T12:03:44.085603",
+      "read": true
+    },
+    {
+      "id": "e4b7182b-6c37-4346-af85-05bb82c775ec",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'If' has been added to your library.",
+      "book_id": 23967,
+      "created_at": "2026-01-03T12:03:43.890924",
+      "read": true
+    },
+    {
+      "id": "5edd71ce-8be3-4f56-87ec-264867e60588",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The South Pole; an account of the Norwegian Antarctic expedition in the \"Fram,\" 1910-12 — Volume 1 and Volume 2' has been added to your library.",
+      "book_id": 6540,
+      "created_at": "2026-01-03T12:03:43.885684",
+      "read": true
+    },
+    {
+      "id": "ce4a7e12-2320-4075-abb7-6453e121a40d",
+      "event_type": "book_ready",
+      "title": "Book Ready!",
+      "message": "'The Jungle Book' has been added to your library.",
+      "book_id": 236,
+      "created_at": "2026-01-03T11:52:42.924331",
+      "read": true
+    }
+  ],
+  "bookmarks": {
+    "236": {
+      "book_id": 236,
+      "text_position": 1462,
+      "created_at": "2026-01-03T11:56:47.561194",
+      "updated_at": "2026-01-03T11:56:47.561235",
+      "label": null
+    },
+    "71497": {
+      "book_id": 71497,
+      "text_position": 2536,
+      "created_at": "2026-01-03T12:05:12.669766",
+      "updated_at": "2026-01-03T12:05:12.669783",
+      "label": null
+    }
+  }
+}

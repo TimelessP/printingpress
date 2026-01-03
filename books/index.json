@@ -1,0 +1,275 @@
+[
+  {
+    "id": 236,
+    "title": "The Jungle Book",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Adventure stories, English",
+      "Animals -- Fiction",
+      "Feral children -- Fiction",
+      "India -- Fiction",
+      "India -- History -- 19th century -- Fiction",
+      "Jungle animals -- Fiction",
+      "Jungles -- Fiction",
+      "Mowgli (Fictitious character) -- Fiction",
+      "Short stories"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/236_The_Jungle_Book.md",
+    "added_at": "2026-01-03 11:52:42.913780",
+    "word_count": 54344,
+    "char_count": 13201675
+  },
+  {
+    "id": 6540,
+    "title": "The South Pole; an account of the Norwegian Antarctic expedition in the \"Fram,\" 1910-12 \u2014 Volume 1 and Volume 2",
+    "authors": [
+      "Amundsen, Roald"
+    ],
+    "subjects": [
+      "Amundsen, Roald, 1872-1928 -- Travel -- Antarctica",
+      "Antarctica -- Discovery and exploration -- Norwegian",
+      "South Pole -- Discovery and exploration -- Norwegian"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/6540_The_South_Pole_an_account_of_the_Norwegian_Antarct.md",
+    "added_at": "2026-01-03 12:03:43.884151",
+    "word_count": 3510,
+    "char_count": 22943
+  },
+  {
+    "id": 23967,
+    "title": "If",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Children's poetry, English",
+      "Conduct of life -- Juvenile poetry"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/23967_If.md",
+    "added_at": "2026-01-03 12:03:43.890135",
+    "word_count": 553,
+    "char_count": 5499
+  },
+  {
+    "id": 8147,
+    "title": "The Man Who Would Be King",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Afghanistan -- Fiction",
+      "British -- Afghanistan -- Fiction",
+      "Kings and rulers -- Fiction",
+      "Political fiction"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/8147_The_Man_Who_Would_Be_King.md",
+    "added_at": "2026-01-03 12:03:44.084529",
+    "word_count": 17337,
+    "char_count": 96392
+  },
+  {
+    "id": 1937,
+    "title": "The Second Jungle Book",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "India -- Fiction",
+      "Jungle animals -- Fiction",
+      "Mowgli (Fictitious character) -- Fiction"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/1937_The_Second_Jungle_Book.md",
+    "added_at": "2026-01-03 12:03:44.231472",
+    "word_count": 66789,
+    "char_count": 363892
+  },
+  {
+    "id": 2781,
+    "title": "Just so stories",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Animals -- Fiction",
+      "Children's stories, English",
+      "Short stories"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/2781_Just_so_stories.md",
+    "added_at": "2026-01-03 12:03:44.626271",
+    "word_count": 31871,
+    "char_count": 194198
+  },
+  {
+    "id": 3414,
+    "title": "The South Pole; an account of the Norwegian Antarctic expedition in the \"Fram,\" 1910-1912 \u2014 Volume 1",
+    "authors": [
+      "Amundsen, Roald"
+    ],
+    "subjects": [
+      "Amundsen, Roald, 1872-1928 -- Travel -- Antarctica",
+      "Antarctica -- Discovery and exploration -- Norwegian",
+      "South Pole -- Discovery and exploration -- Norwegian"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/3414_The_South_Pole_an_account_of_the_Norwegian_Antarct.md",
+    "added_at": "2026-01-03 12:03:44.705760",
+    "word_count": 112165,
+    "char_count": 615329
+  },
+  {
+    "id": 2806,
+    "title": "The Phantom 'Rickshaw, and Other Ghost Stories",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Ghost stories, English"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/2806_The_Phantom_Rickshaw_and_Other_Ghost_Stories.md",
+    "added_at": "2026-01-03 12:03:44.742664",
+    "word_count": 48738,
+    "char_count": 293800
+  },
+  {
+    "id": 2226,
+    "title": "Kim",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Adventure stories",
+      "Boys -- Fiction",
+      "India -- Fiction",
+      "Irish -- India -- Fiction",
+      "Lamas -- Fiction",
+      "Orphans -- Fiction",
+      "Spy stories"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/2226_Kim.md",
+    "added_at": "2026-01-03 12:03:44.801120",
+    "word_count": 107619,
+    "char_count": 605774
+  },
+  {
+    "id": 2569,
+    "title": "The Day's Work",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "Manners and customs -- Fiction",
+      "Short stories, English"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/2569_The_Days_Work.md",
+    "added_at": "2026-01-03 12:03:44.905177",
+    "word_count": 107582,
+    "char_count": 612396
+  },
+  {
+    "id": 5777,
+    "title": "Life's Handicap: Being Stories of Mine Own People",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "India -- History -- British occupation, 1765-1947 -- Fiction",
+      "India -- Social life and customs -- Fiction",
+      "Short stories, English"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/5777_Lifes_Handicap_Being_Stories_of_Mine_Own_People.md",
+    "added_at": "2026-01-03 12:03:44.973421",
+    "word_count": 109038,
+    "char_count": 660902
+  },
+  {
+    "id": 8649,
+    "title": "Indian Tales",
+    "authors": [
+      "Kipling, Rudyard"
+    ],
+    "subjects": [
+      "India -- Social life and customs -- Fiction",
+      "Short stories, English"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/8649_Indian_Tales.md",
+    "added_at": "2026-01-03 12:03:45.099454",
+    "word_count": 171349,
+    "char_count": 948649
+  },
+  {
+    "id": 4229,
+    "title": "The South Pole; an account of the Norwegian Antarctic expedition in the \"Fram,\" 1910-12 \u2014 Volume 1 and Volume 2",
+    "authors": [
+      "Amundsen, Roald"
+    ],
+    "subjects": [
+      "Amundsen, Roald, 1872-1928 -- Travel -- Antarctica",
+      "Antarctica -- Discovery and exploration -- Norwegian",
+      "South Pole -- Discovery and exploration -- Norwegian"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/4229_The_South_Pole_an_account_of_the_Norwegian_Antarct.md",
+    "added_at": "2026-01-03 12:03:45.245079",
+    "word_count": 227240,
+    "char_count": 1242126
+  },
+  {
+    "id": 71497,
+    "title": "Our polar flight",
+    "authors": [
+      "Amundsen, Roald",
+      "Ellsworth, Lincoln"
+    ],
+    "subjects": [
+      "Aeronautics -- Flights",
+      "Arctic regions",
+      "North Pole"
+    ],
+    "languages": [
+      "en"
+    ],
+    "markdown_path": "markdown/71497_Our_polar_flight.md",
+    "added_at": "2026-01-03 12:03:54.960708",
+    "word_count": 92185,
+    "char_count": 17014063
+  }
+]

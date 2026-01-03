@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Printing Press</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <a href="/" class="logo">📚 Printing Press</a>
+            <nav class="nav">
+                <a href="/" class="nav-link active">Search</a>
+                <a href="/basket" class="nav-link">
+                    Basket
+                    <span id="basket-badge" class="badge" style="display: none;">0</span>
+                </a>
+                <a href="/library" class="nav-link">Library</a>
+                <a href="/events" class="nav-link">
+                    Events
+                    <span id="events-badge" class="badge" style="display: none;">0</span>
+                </a>
+            </nav>
+        </header>
+
+        <main class="main">
+            <h1 style="margin-bottom: 1.5rem;">Search Project Gutenberg</h1>
+
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="Search for books by title, author, or subject..." autofocus>
+                <button id="search-btn" class="btn btn-primary">Search</button>
+            </div>
+
+            <div id="results-container">
+                <div class="empty-state">
+                    <h2>🔍 Find Your Next Read</h2>
+                    <p>Search for books from Project Gutenberg's collection of over 70,000 free eBooks.</p>
+                </div>
+            </div>
+
+            <div id="pagination" class="pagination" style="display: none;">
+                <button id="prev-btn" class="btn btn-secondary btn-sm" disabled>← Previous</button>
+                <span id="page-info"></span>
+                <button id="next-btn" class="btn btn-secondary btn-sm">Next →</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const resultsContainer = document.getElementById('results-container');
+        const pagination = document.getElementById('pagination');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const pageInfo = document.getElementById('page-info');
+
+        let currentPage = 1;
+        let currentQuery = '';
+        let hasNext = false;
+        let hasPrev = false;
+
+        async function search(query, page = 1) {
+            if (!query.trim()) return;
+
+            currentQuery = query;
+            currentPage = page;
+
+            resultsContainer.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
+            pagination.style.display = 'none';
+
+            try {
+                const data = await api(`/gutenberg/search?q=${encodeURIComponent(query)}&page=${page}`);
+                
+                if (data.books.length === 0) {
+                    resultsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <h2>No Results Found</h2>
+                            <p>Try a different search term.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                hasNext = data.has_next;
+                hasPrev = data.has_prev;
+
+                let html = '<div class="book-list">';
+                for (const book of data.books) {
+                    const authors = book.authors.length > 0 ? book.authors.join(', ') : 'Unknown Author';
+                    html += `
+                        <div class="book-item">
+                            <div class="book-info">
+                                <div class="book-title">${escapeHtml(book.title)}</div>
+                                <div class="book-author">${escapeHtml(authors)}</div>
+                                <div class="book-meta">
+                                    <span>📥 ${book.download_count.toLocaleString()} downloads</span>
+                                    <span>🌐 ${book.languages.join(', ').toUpperCase()}</span>
+                                </div>
+                            </div>
+                            <div class="book-actions">
+                                <button class="btn btn-primary btn-sm add-to-basket" data-book='${JSON.stringify(book).replace(/'/g, "&#39;")}'>
+                                    Add to Basket
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                resultsContainer.innerHTML = html;
+
+                // Update pagination
+                pagination.style.display = 'flex';
+                pageInfo.textContent = `Page ${page} of ~${Math.ceil(data.total / 32)}`;
+                prevBtn.disabled = !hasPrev;
+                nextBtn.disabled = !hasNext;
+
+                // Add event listeners to buttons
+                document.querySelectorAll('.add-to-basket').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const book = JSON.parse(e.target.dataset.book);
+                        await addToBasket(book);
+                    });
+                });
+
+            } catch (e) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <h2>Error</h2>
+                        <p>${escapeHtml(e.message)}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function addToBasket(book) {
+            try {
+                const result = await api('/basket', {
+                    method: 'POST',
+                    body: JSON.stringify({ book }),
+                });
+
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    updateBasketCount();
+                } else {
+                    showToast(result.message, 'info');
+                }
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        // Event listeners
+        searchBtn.addEventListener('click', () => search(searchInput.value));
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') search(searchInput.value);
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (hasPrev) search(currentQuery, currentPage - 1);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (hasNext) search(currentQuery, currentPage + 1);
+        });
+    </script>
+</body>
+</html>
