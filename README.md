@@ -1,3 +1,52 @@
+# Printing Press
+
+Printing Press is a small FastAPI application that fetches books from Project Gutenberg, converts them to Markdown, and provides a searchable local library and reader UI.
+
+## Features
+
+- Search Project Gutenberg and add books to your local library
+- Convert books to Markdown with preserved anchors and basic cleanup
+- Read books in-browser with preview and source views
+- Bookmarks, events/notifications, and a simple processing queue
+
+## Quick Start
+
+Prerequisites:
+
+- Python 3.10+ (this project was developed with Python 3.12)
+- `git` and `gh` (optional, for publishing)
+
+Recommended (create virtual environment):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt  # if present
+```
+
+Run the development server:
+
+```bash
+# from the repository root
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Open your browser at http://127.0.0.1:8000
+
+## Data directories
+
+- `books/` contains processed markdown files.
+- `data/` stores application state (bookmarks, events, index).
+
+These folders are ignored from git by default.
+
+## Contributing
+
+Issues and pull requests are welcome. For major changes, please open an issue first to discuss the plan.
+
+## License
+
+This project is provided without an explicit license. Add a `LICENSE` file if you wish to publish under a specific license.
 # Printing Press 📚
 
 A self-hosted web application for searching, downloading, and reading books from [Project Gutenberg](https://www.gutenberg.org/). Books are converted to standardized Markdown with embedded images and stored locally for offline reading.
