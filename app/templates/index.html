@@ -83,6 +83,13 @@
                     </svg>
                     Search
                 </button>
+                <button class="btn btn-secondary" id="search-library-btn" title="Search your local library">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path>
+                        <path d="M7 7V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v3"></path>
+                    </svg>
+                    Search Library
+                </button>
             </div>
 
             <div id="results">
@@ -119,6 +126,63 @@
             } catch (error) {
                 resultsDiv.innerHTML = `<div class="empty-state"><h2>Search failed</h2><p>${error.message}</p></div>`;
             }
+        }
+
+        // Search the local library
+        async function searchLibrary() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Searching library...</div>';
+
+            try {
+                const response = await api.searchLibrary(query);
+                renderLibraryResults(response);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="empty-state"><h2>Search failed</h2><p>${error.message}</p></div>`;
+            }
+        }
+
+        // Render results from local library search
+        function renderLibraryResults(data) {
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                        <h2>No results found</h2>
+                        <p>Try a different search term.</p>
+                    </div>`;
+                return;
+            }
+
+            const booksHtml = data.results.map(r => {
+                const book = r.entry;
+                const authors = (book.authors || []).map(a => escapeHtml(a)).join(', ') || 'Unknown Author';
+                return `
+                <div class="book-item">
+                    <div class="book-info">
+                        <div class="book-title">${escapeHtml(book.title)}</div>
+                        <div class="book-author">${authors}</div>
+                        <div class="book-meta">
+                            <span>${book.added_at ? formatDate(book.added_at) : ''}</span>
+                        </div>
+                    </div>
+                    <div class="book-actions">
+                        <a href="/read/${book.id}" class="btn btn-secondary btn-sm">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                            </svg>
+                            Read
+                        </a>
+                    </div>
+                </div>`;
+            }).join('');
+
+            resultsDiv.innerHTML = `<div class="book-list">${booksHtml}</div>`;
         }
 
         function renderResults(data) {
@@ -204,6 +268,10 @@
                     addToBasket(bookId, title);
                 });
             });
+
+            // Ensure search library button listeners aren't affected by rendering
+            const searchLibraryBtn = document.getElementById('search-library-btn');
+            if (searchLibraryBtn) searchLibraryBtn.addEventListener('click', searchLibrary);
             
             // Attach event listeners to pagination buttons
             const prevBtn = document.querySelector('.prev-page-btn');
@@ -230,6 +298,10 @@
         // Update counts on load
         updateBasketCount();
         updateUnreadCount();
+
+        // Wire search library button
+        const searchLibraryBtn = document.getElementById('search-library-btn');
+        if (searchLibraryBtn) searchLibraryBtn.addEventListener('click', () => searchLibrary());
     </script>
 </body>
 </html>

@@ -386,7 +386,8 @@ class BookProcessor:
             return markdown
 
         # For each unique URL, fetch and replace
-        replacements: dict[str, str] = {}
+        # replacements maps raw_url -> (data_url, absolute_url)
+        replacements: dict[str, tuple[str, str]] = {}
 
         for raw_url in img_urls:
             # Resolve relative URLs against base_url
@@ -415,18 +416,54 @@ class BookProcessor:
             b64 = base64.b64encode(data).decode('ascii')
             data_url = f"data:{content_type};base64,{b64}"
 
-            replacements[raw_url] = data_url
 
-        # Perform replacements in markdown
-        def replace_fn(match):
-            url = match.group(1).strip()
-            return f"![{match.group(0).split('](')[0][2:]}]({replacements.get(url, url)})"
+            # store tuple of (data_url, absolute_url)
+            replacements[raw_url] = (data_url, absolute)
 
-        # Replace markdown img links
-        markdown = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', lambda m: f"![{m.group(1)}]({replacements.get(m.group(2).strip(), m.group(2).strip())})", markdown)
+        if not replacements:
+            return markdown
 
-        # Replace html img src attributes
-        markdown = re.sub(r'(<img[^>]*src=["\'])([^"\']+)(["\'])', lambda m: m.group(1) + replacements.get(m.group(2), m.group(2)) + m.group(3), markdown, flags=re.IGNORECASE)
+        # Build reverse mapping from data_url -> absolute for wrapping HTML <img> tags
+        data_to_absolute: dict[str, str] = {v[0]: v[1] for v in replacements.values()}
+
+        # Replace markdown img links: render image using data URL but wrap the image
+        # in a link to the absolute original URL so the original link is preserved.
+        def replace_md_img(m):
+            alt = m.group(1)
+            url = m.group(2).strip()
+            tup = replacements.get(url)
+            if tup:
+                data_url, absolute_url = tup
+                return f"[![{alt}]({data_url})]({absolute_url})"
+            return m.group(0)
+
+        markdown = re.sub(r'!\[([^\]]*)\]\(([^)]+)\)', replace_md_img, markdown)
+
+        # Replace html img src attributes with data URLs, then wrap the <img> tag
+        # in an <a> linking to the absolute URL.
+        def replace_img_src(m):
+            prefix = m.group(1)
+            url = m.group(2)
+            suffix = m.group(3)
+            tup = replacements.get(url)
+            if tup:
+                data_url, absolute_url = tup
+                # keep original attributes but replace the src value with data URL
+                return prefix + data_url + suffix
+            return m.group(0)
+
+        markdown = re.sub(r'(<img[^>]*src=["\'])([^"\']+)(["\'])', replace_img_src, markdown, flags=re.IGNORECASE)
+
+        # Now wrap any <img ... src="data:..."> occurrences with a link to absolute URL
+        def wrap_data_img(m):
+            full_tag = m.group(1)
+            data_url = m.group(2)
+            absolute_url = data_to_absolute.get(data_url)
+            if absolute_url:
+                return f'<a href="{absolute_url}">{full_tag}</a>'
+            return full_tag
+
+        markdown = re.sub(r'(<img[^>]*src=["\'](data:[^"\']+)["\'][^>]*>)', wrap_data_img, markdown, flags=re.IGNORECASE)
 
         return markdown
 

@@ -73,6 +73,8 @@ async function apiRequest(endpoint, options = {}) {
 const api = {
     // Search (Gutenberg)
     search: (query, page = 1) => apiRequest(`/gutenberg/search?q=${encodeURIComponent(query)}&page=${page}`),
+    // Library search (local)
+    searchLibrary: (query, limit = 50) => apiRequest(`/library/search?q=${encodeURIComponent(query)}&limit=${limit}`),
     
     // Basket
     getBasket: () => apiRequest('/basket'),

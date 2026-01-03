@@ -84,6 +84,19 @@
     }
 }
 
+/* Ensure form controls use dark variables when system theme is dark */
+@media (prefers-color-scheme: dark) {
+    [data-theme="system"] .search-input {
+        background: var(--bg-card);
+        color: var(--text);
+        border-color: var(--border);
+    }
+
+    [data-theme="system"] .search-input::placeholder {
+        color: var(--text-muted);
+    }
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -261,6 +274,7 @@ body {
     border-radius: var(--radius);
     font-size: 14px;
     background: var(--bg-card);
+    color: var(--text);
     transition: border-color var(--transition), box-shadow var(--transition);
 }
 
